@@ -1,0 +1,17 @@
+body {
+	/* Move down content because we have a fixed navbar */
+	padding-top: 70px;
+	padding-bottom: 20px;
+}
+
+#admin .pagination {
+	margin: 5px 0 0 0;
+}
+
+#admin .panel-footer {
+	text-align: right;
+}
+
+textarea{
+    resize:vertical;
+}

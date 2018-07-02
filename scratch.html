@@ -1,0 +1,184 @@
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="description" content="">
+		<meta name="author" content="">
+
+		<title>Employee Management - Employees - Edit</title>
+
+		<!-- Bootstrap -->
+		<link href="https://stackpath.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+
+		<!-- Extra CSSs loaded from an ejs view -->
+		<link rel="stylesheet" href="http://localhost:3000/css/jasny-bootstrap.min.css" />
+		
+		<!-- Custom styles -->
+		<link href="http://localhost:3000/css/default.css" rel="stylesheet">
+
+		<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+		<!--[if lt IE 9]>
+			<script src="//oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+			<script src="//oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+		<![endif]-->
+	</head>
+	<body>
+
+		<div class="navbar navbar-default navbar-fixed-top" role="navigation">
+	<div class="container">
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			<a class="navbar-brand" href="/">Employee Management</a>
+		</div>
+		<div class="navbar-collapse collapse">
+			<ul class="nav navbar-nav navbar-right">
+				<li><a href="/">Home</a></li><li><a href="/users/">Users</a></li><li><a href="/employees/">Employees</a></li>
+				
+				<li class="dropdown">
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown">Global Administrator <b class="caret"></b></a>
+					<ul class="dropdown-menu">
+						<li><a href="/users/edit/5b282a53e0a52642d40dbe07/">Account</a></li>
+						<li><a href="/signout">Sign out</a></li>
+					</ul>
+				</li>
+				
+			</ul>
+		</div>
+	</div>
+</div>
+
+
+		
+	<style>
+		.wrapper {
+			position: relative;
+		}
+
+		
+		.box {
+				position: absolute;
+				top: 163px;
+				left: 604px;
+				width: 303px;
+				height: 303px;
+				border: 2px solid #ff0000;
+				background-color: transparent
+			}
+		
+		
+	</style>
+
+	<div class="container" id="admin">
+		<div class="row">
+			<div class="col-xs-12 col-sm-12 col-md-12">
+				
+						<div class="panel panel-default">
+							<!-- Default panel contents -->
+							<div class="panel-heading">
+								<h3>
+									Alan Romo
+								</h3>
+							</div>
+
+							<form role="form" acton="/employees/update/5b2d09452f648b0744ac03bf/" method="post" enctype="multipart/form-data">
+								<div class="panel-body">
+
+									
+										<div class="form-group">
+											<label class="control-label">Existing Photo</label>
+											<div class="">
+												<div class="wrapper">
+													<img src="https://iheaq4y36kzwy.blob.core.windows.net/pics/5b2d09452f648b0744ac03bf.jpg" alt="Alan Romo Photo"
+													 style="max-width: 300px; max-height: 300px;" id="existingImage">
+													<div class="box" id="rectangleHolder"></div>
+												</div>
+
+											</div>
+										</div>
+
+										
+
+											<div class="form-group">
+												<label class="control-label" for="image">Thumbnail</label>
+												<div class="">
+													<!-- jasny bootstrap image upload widget -->
+													<div class="fileinput fileinput-new " data-provides="fileinput">
+														<div class="fileinput-new thumbnail" data-trigger="fileinput" style="width: 240px; height: 140px;">
+
+															
+																<img src="https://iheaq4y36kzwy.blob.core.windows.net/pics/5b2d09452f648b0744ac03bf.jpg" alt="Alan Romo Photo" id="thumbnailImage">
+																
+														</div>
+														<div class="fileinput-preview fileinput-exists thumbnail" data-trigger="fileinput" style="max-width: 240px; max-height: 140px;"
+														 id="imageThumbnail"></div>
+														<div>
+															<span class="btn btn-default btn-file">
+																<span class="fileinput-new">Select image</span>
+																<span class="fileinput-exists">Change</span>
+																
+																	<input type="file" name="image" id="image">
+																	
+															</span>
+															<a href="#" class="btn btn-default fileinput-exists" data-dismiss="fileinput">Remove</a>
+														</div>
+													</div>
+													<!-- /jasny bootstrap image upload widget -->
+												</div>
+											</div>
+
+											<img id="newImage" src="#" alt="your image" style="display:none;" />
+
+											<div class="form-group">
+												<label class="control-label" for="name">Name</label>
+												<input id="name" name="name" type="text" class="form-control" value="Alan Romo" required>
+
+											</div>
+
+											<div class="form-group">
+												<label class="control-label" for="department">Department</label>
+												<input id="department" name="department" type="text" class="form-control" value="Sales" required>
+
+											</div>
+
+											<div class="form-group">
+												<label class="control-label" for="name">Description</label>
+												<textarea name="description" id="description" class="form-control" rows="3"></textarea>
+											</div>
+
+								</div>
+
+								<div class="panel-footer">
+									<button type="submit" class="btn btn-default">Submit</button>
+								</div>
+
+							</form>
+						</div>
+						<!--/.panel .panel-default -->
+			</div>
+		</div>
+		<!--/.row -->
+	</div>
+
+		<!-- Bootstrap core JavaScript loaded from jsDelivr -->
+		<!-- Placed at the end of the document so the pages load faster -->
+		<!--<script src="//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>-->
+		<!-- <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script> -->
+		<script src="https://stackpath.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+		<!-- Extra JSs loaded from an ejs view -->
+		<script src="http://localhost:3000/js/jasny-bootstrap.min.js"></script>
+<script src="http://localhost:3000/js/jquery.fullscreen-min.js"></script>
+<script src="http://localhost:3000/js/employee_edit.js"></script>
+
+	</body>
+</html>

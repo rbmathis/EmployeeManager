@@ -1,0 +1,29 @@
+    <script>
+
+        $(document).ready(function () {
+            var holder = document.getElementById("oldImage");
+            var s = holder.style;
+            var oldTop = holder.x;
+            var oldleft = holder.y;
+            alert('drawing rectangle');
+            $("#rectangleHolder").css("border", "3px solid blue");
+            $("#rectangleHolder").css("position", "absolute");
+            $("#rectangleHolder").css("top", holder.x + "px");
+            $("#rectangleHolder").css("left", holder.x + "px");
+            $("#rectangleHolder").css("width", "100px");
+            $("#rectangleHolder").css("height", "100px");
+
+        });
+    </script>
+
+actual: 1572 x 1048
+shown : 300 x 200
+old :
+	x:398, 
+	y:428
+
+face : 
+	top : 323,
+	left: 545,
+	width: 197,
+	height: 197

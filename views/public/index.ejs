@@ -1,0 +1,40 @@
+<% layout('../boilerplate') -%>
+<!-- Main jumbotron for a primary marketing message or call to action -->
+<div class="container theme-showcase" role="main">
+	<div class="jumbotron">
+		<h1>Employee Management</h1>
+		<p>This is an example application created in NodeJS for the CSE Mentorship program in FY18.  
+			There are lots of things going on here.  
+			NodeJS, Express, Mongo/Cosmos, EJS, Azure blob storage and cognitive services. </p>
+		<% if(!user){ %>
+			<p><a href="/signin" class="btn btn-primary btn-lg" role="button">Sign in &raquo;</a>
+				<% } %>
+			</p>
+	</div>
+</div>
+
+<div class="container">
+	<!-- Example row of columns -->
+	<div class="row">
+<% if(user){ %>
+		<div class="col-md-4">
+			<h2>User Management</h2>
+			<p>Click here to manage users.</p>
+			<p><a class="btn btn-default" href="/users/" role="button">View users &raquo;</a>
+			</p>
+		</div>
+		<div class="col-md-4">
+			<h2>Employee Management</h2>
+			<p>Click here to manage employees.</p>
+			<p><a class="btn btn-default" href="/employees/" role="button">View employees &raquo;</a>
+			</p>
+		</div>
+		<div class="col-md-4">
+			<h2>Account</h2>
+			<p>Click here to manage you account.</p>
+			<p><a class="btn btn-default" href="/users/edit/<%=user._id%>/" role="button">View account &raquo;</a>
+			</p>
+		</div>
+<% } %>
+	</div>
+</div>
