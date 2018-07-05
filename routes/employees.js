@@ -6,6 +6,7 @@ var async = require('async');
 
 module.exports = function (CONFIG, app, ensureAuthenticated, mongoose, models) {
 
+	
 	// Show the employee creation form
 	app.get('/employees/create', ensureAuthenticated, function (req, res, next) {
 		res.render('employees/detail', {
@@ -51,7 +52,8 @@ module.exports = function (CONFIG, app, ensureAuthenticated, mongoose, models) {
 			edited: now
 		});
 
-		processImageUpload(req, res, employee, val_errors, has_errors, error_msg, function (err, employee) {
+		var photoBlobName = (employee.id + img.ext).toLowerCase();
+		processImageUpload(req, res, employee, photoBlobName, val_errors, has_errors, error_msg, function (err, employee) {
 
 			if (!err) {
 				//save the employee to cosmos
@@ -67,7 +69,6 @@ module.exports = function (CONFIG, app, ensureAuthenticated, mongoose, models) {
 						//cosmos save failed
 						if (err.code == 11000) {
 							error_msg[0] = 'Duplicate entry.';
-							val_errors.email = true;
 						} else {
 							// In an unkown error
 							error_msg[0] = 'Unknown error, try again later.';
@@ -75,10 +76,10 @@ module.exports = function (CONFIG, app, ensureAuthenticated, mongoose, models) {
 						}
 						handleEmployeeCreateError(req, res, CONFIG, val_errors, error_msg);
 						return;
-
 					}
 				});
 			} else {
+				//image processing failed
 				handleEmployeeCreateError(req, res, CONFIG, val_errors, error_msg);
 				return;
 			}
@@ -89,9 +90,7 @@ module.exports = function (CONFIG, app, ensureAuthenticated, mongoose, models) {
 
 	// Show the edit form with the employee data
 	app.get('/employees/edit/:id/', ensureAuthenticated, function (req, res, next) {
-		models.employees.findOne({
-			_id: req.params.id
-		}, function (err, data) {
+		models.employees.findOne({ _id: req.params.id }, function (err, data) {
 			if (data) {
 				res.render('employees/detail', {
 					title: 'Employees - Edit',
@@ -141,9 +140,7 @@ module.exports = function (CONFIG, app, ensureAuthenticated, mongoose, models) {
 		}
 
 		// Find selected employee
-		models.employees.findOne({
-			_id: req.params.id
-		}, function (err, employee) {
+		models.employees.findOne({ _id: req.params.id }, function (err, employee) {
 			if (employee) {
 
 				// Modify values received from the form
@@ -162,154 +159,77 @@ module.exports = function (CONFIG, app, ensureAuthenticated, mongoose, models) {
 					return;
 				}
 
-				//save the new file with tmp name
 				var tmpFilename = (Date.now() + img.ext).toLowerCase();
-				blobs.moveLocalFileToBlobStorage(CONFIG, img, tmpFilename, function (err, blob) {
-					if (!err) {
+				processImageUpload(req, res, employee, tmpFilename, val_errors, has_errors, error_msg, function (err, employee) {
 
-						//detect a face
-						var imageUrl = CONFIG.blobs.url + blob.container + '/' + blob.name;
-						cognitive.detectFace(CONFIG, imageUrl, function (err, result) {
+					if (!err) {
+						// ensure the same person is in the both images
+						var tmpUrl = CONFIG.blobs.url + CONFIG.blobs.containerName + '/' + tmpFilename;
+						var empUrl = CONFIG.blobs.url + CONFIG.blobs.containerName + '/' + employee.id + employee.imageExtension;
+						cognitive.verifyFacesMatch(CONFIG, tmpUrl, empUrl, function (err, result) {
 							if (!err) {
 
-								//there is only one face
-								if (result.length === 1) {
+								//identical people?
+								if (result.isIdentical) {
 
-									var faceRectangle = JSON.stringify(result[0].faceRectangle);
+									employee.faceRectangle = faceRectangle;
 
-									// ensure the same person is in the both images
-									var tmpUrl = CONFIG.blobs.url + blob.container + '/' + tmpFilename;
-									var empUrl = CONFIG.blobs.url + blob.container + '/' + employee.id + employee.imageExtension;
-									cognitive.verifyFacesMatch(CONFIG, tmpUrl, empUrl, function (err, result) {
+									//cosmos save
+									employee.save(function (err, new_employee) {
 										if (!err) {
+											// if (result.length === 1) {
 
-											//identical people?
-											if (result.isIdentical) {
+											//rename the new blob (remove the "tmp")
+											blobs.copyBlob(CONFIG, tmpUrl, CONFIG.blobs.containerName, employee.id + employee.imageExtension, function (err, result) {
+												if (!err) {
+													blobs.deleteBlob(CONFIG, tmpFilename);
+												}
+											});
 
-												employee.faceRectangle = faceRectangle;
+											//ultimate success!
+											setFlashAndRedirect(req, res, 'success', `${employee.name} was updated successfully.`, '/employees/');
+										} else {
 
-												//cosmos save
-												employee.save(function (err, new_employee) {
-													if (!err) {
-														// if (result.length === 1) {
-
-														//rename the new blob (remove the "tmp")
-														blobs.copyBlob(CONFIG, tmpUrl, CONFIG.blobs.containerName, employee.id + employee.imageExtension, function (err, result) {
-															if (!err) {
-																blobs.deleteBlob(CONFIG, tmpFilename);
-															}
-														})
-
-														//ultimate success!
-														setFlashAndRedirect(req, res, 'success', `${employee.name} was updated successfully.`, '/employees/');
-
-													} else {
-
-														//cosmos failed
-														if (err.code == 11000) {
-															error_msg[0] = 'Duplicate entry.';
-															val_errors.email = true;
-														} else {
-															// In an unkown error
-															error_msg[0] = 'Unknown error, try again later.';
-															console.log(err);
-														}
-														res.render('employees/detail', {
-															title: 'Employees - Edit',
-															site: CONFIG.site,
-															user: req.user,
-															path: req.url,
-															form_action: '/employees/update/' + req.params.id + '/',
-															item: employee,
-															validation: val_errors,
-															error_msg: error_msg,
-															rect: JSON.parse(employee.faceRectangle)
-														});
-													}
-												})//employee.save(function (err, new_employee) {
+											//cosmos failed
+											if (err.code == 11000) {
+												error_msg[0] = 'Duplicate entry.';
+												val_errors.email = true;
+											} else {
+												// In an unkown error
+												error_msg[0] = 'Unknown error, try again later.';
+												console.log(err);
 											}
-											else {
-												// the faces don't match
-												blobs.deleteBlob(CONFIG, tmpFilename, null);
-
-												has_errors = true;
-												val_errors['image'] = true;
-												error_msg[0] = `The image you have uploaded doesn't match the employee's face. Please choose another photo. Confidence: ${(result.confidence) * 100}%`;
-												res.render('employees/detail', {
-													title: 'Employees - Edit',
-													site: CONFIG.site,
-													user: req.user,
-													path: req.url,
-													form_action: '/employees/update/' + req.params.id + '/',
-													item: employee,
-													validation: val_errors,
-													error_msg: error_msg,
-													rect: JSON.parse(employee.faceRectangle)
-												});
-											}
+											handleEmployeeEditError(req, res, val_errors, error_msg, employee.faceRectangle)
 										}
-									})
-								} else {	//if (result.length === 1) {
-									//we detected <> 1 face
-									var imageUrl = CONFIG.blobs.url + blob.container + '/' + blob.name;
+									});//employee.save(function (err, new_employee) {
+								}
+								else {
+									// the faces don't match
 									blobs.deleteBlob(CONFIG, tmpFilename, null);
 
 									has_errors = true;
 									val_errors['image'] = true;
-									error_msg[0] = `We require all photos to contain exactly one face, and we detected ${result.length} faces in the image provided.`;
-									res.render('employees/detail', {
-										title: 'Employees - Edit',
-										site: CONFIG.site,
-										user: req.user,
-										path: req.url,
-										form_action: '/employees/update/' + req.params.id + '/',
-										item: employee,
-										validation: val_errors,
-										error_msg: error_msg,
-										rect: JSON.parse(employee.faceRectangle)
-									});
+									error_msg[0] = `The image you have uploaded doesn't match the employee's face. Please choose another photo. Confidence: ${(result.confidence) * 100}%`;
+									handleEmployeeEditError(req, res, val_errors, error_msg, employee.faceRectangle)
 								}
 
-							} else {	//err => cognitive.detectFace(CONFIG, imageUrl, function (err, result) {
+							} else {
+								//error calling verfiFacesMatch
+								blobs.deleteBlob(CONFIG, tmpFilename, null);
 
-								//we couldn't detect a face
 								has_errors = true;
 								val_errors['image'] = true;
-								error_msg[0] = `An error occurred while examinig the photo for a face : ${err}`;
-								res.render('employees/detail', {
-									title: 'Employees - Edit',
-									site: CONFIG.site,
-									user: req.user,
-									path: req.url,
-									form_action: '/employees/update/' + req.params.id + '/',
-									item: employee,
-									validation: val_errors,
-									error_msg: error_msg,
-									rect: JSON.parse(employee.faceRectangle)
-								});
-
+								error_msg[0] = `Error while comparing the employee's face to the new image: ${err}.`;
+								handleEmployeeEditError(req, res, val_errors, error_msg, employee.faceRectangle)
 							}
-						});
+						});//cognitive.verifyFacesMatch
+
 					} else {
-
-						//blob upload failed
-						has_errors = true;
-						val_errors['image'] = true;
-						error_msg[0] = `An error occurred while uploading the employee photo to blob storage : ${err}`;
-						res.render('employees/detail', {
-							title: 'Employees - Edit',
-							site: CONFIG.site,
-							user: req.user,
-							path: req.url,
-							form_action: '/employees/update/' + req.params.id + '/',
-							item: employee,
-							validation: val_errors,
-							error_msg: error_msg,
-							rect: JSON.parse(employee.faceRectangle)
-						});
-
+						//image processing failed
+						handleEmployeeCreateError(req, res, CONFIG, val_errors, error_msg);
+						return;
 					}
-				});
+				});//processImageUpload
 
 			} else {
 				// 404 - employee not found on DB
@@ -435,6 +355,7 @@ module.exports = function (CONFIG, app, ensureAuthenticated, mongoose, models) {
 		});
 	}
 
+
 	function setFlashAndRedirect(req, res, type, msg, redirect) {
 		req.flash(type, msg);
 		setTimeout(() => {
@@ -442,7 +363,8 @@ module.exports = function (CONFIG, app, ensureAuthenticated, mongoose, models) {
 		}, 500);
 	}
 
-	function handleEmployeeCreateError(req, res, CONFIG, val_errors, error_msg) {
+
+	function handleEmployeeCreateError(req, res, val_errors, error_msg) {
 		res.render('employees/detail', {
 			title: 'Employees - Create',
 			site: CONFIG.site,
@@ -457,7 +379,23 @@ module.exports = function (CONFIG, app, ensureAuthenticated, mongoose, models) {
 
 	}
 
-	function processImageUpload(req, res, employee, val_errors, has_errors, error_msg, callback) {
+
+	function handleEmployeeEditError(req, res, val_errors, error_msg, faceRectangle) {
+		res.render('employees/detail', {
+			title: 'Employees - Edit',
+			site: CONFIG.site,
+			user: req.user,
+			path: req.url,
+			form_action: '/employees/update/' + req.params.id + '/',
+			item: employee,
+			validation: val_errors,
+			error_msg: error_msg,
+			rect: JSON.parse(faceRectangle)
+		});
+	}
+
+	///uploads an image from a form post
+	function processImageUpload(req, res, employee, photoBlobName, val_errors, has_errors, error_msg, callback) {
 
 		//grab the image from the upload
 		var img = null;
@@ -468,23 +406,16 @@ module.exports = function (CONFIG, app, ensureAuthenticated, mongoose, models) {
 			if (img.type != 'image/png' && img.type != 'image/jpeg') {
 				fs.unlinkSync(img.path);//delete the local file
 				img = null;
+				val_errors['image'] = true;
+				has_errors = true;
+				error_msg[0] = `We only accept JPG or PNG images.`;
+				handleEmployeeCreateError(req, res, CONFIG, val_errors, error_msg);
+				return;
 			}
 		}
 
-		//ensure no image errors
-		if (null == img) {
-			val_errors['image'] = true;
-			has_errors = true;
-		}
-
-		if (has_errors) {
-			error_msg[0] = `We only accept JPG or PNG images.`;
-			handleEmployeeCreateError(req, res, CONFIG, val_errors, error_msg);
-			return;
-		}
-
 		employee.imageExtension = img.ext;
-		var photoBlobName = (employee.id + img.ext).toLowerCase();
+
 		blobs.moveLocalFileToBlobStorage(img, photoBlobName, function (err, newBlob) {
 			if (!err) {
 
@@ -498,16 +429,16 @@ module.exports = function (CONFIG, app, ensureAuthenticated, mongoose, models) {
 							console.log(`Successfully detected exactly one face in ${imageUrl}`);
 							//grab the rectangle where the face is located
 							employee.faceRectangle = JSON.stringify(result[0].faceRectangle);
+
+							//success!
 							callback(null, employee);
 							return;
 
 						} else {
 
 							//we detected <> 1 face
-							//cleanup
 							employee.remove(null);
 							blobs.deleteBlob(CONFIG, photoBlobName, null);
-
 							has_errors = true;
 							val_errors['image'] = true;
 							error_msg[0] = `We require all photos to contain exactly one face, and we detected ${result.length} faces in the image provided.`;
@@ -517,10 +448,8 @@ module.exports = function (CONFIG, app, ensureAuthenticated, mongoose, models) {
 
 					} else {
 						//we couldn't detect a face
-
 						employee.remove(null);
 						blobs.deleteBlob(CONFIG, imageUrl, null);
-
 						has_errors = true;
 						val_errors['image'] = true;
 						error_msg[0] = `An error occurred while examinig the photo for a face : ${err}`;
