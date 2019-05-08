@@ -12,7 +12,7 @@ variables:
   azureSubscription: 'eba4ebca-f355-4161-b984-97a720f65d67'
   
   # Web app name
-  webAppName: 'NashDevNodeLinux'
+  webAppName: 'expressnodeonlinux'
 
   # Agent VM image name
   vmImageName: 'ubuntu-latest'
