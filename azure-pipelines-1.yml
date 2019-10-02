@@ -9,7 +9,8 @@ trigger:
 variables:
 
   # Agent VM image name
-  vmImageName: 'ubuntu-latest'
+  #vmImageName: 'ubuntu-latest'
+  vmImageName: 'win1806pro'
 
 stages:
 - stage: Build
