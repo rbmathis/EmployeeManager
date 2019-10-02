@@ -10,7 +10,7 @@ variables:
 
   # Agent VM image name
   #vmImageName: 'ubuntu-latest'
-  vmImageName: 'win1806pro'
+  vmImageName: 'win1803pro'
 
 stages:
 - stage: Build
