@@ -22,7 +22,7 @@ stages:
     - task: ReplaceTokens@1
       inputs:
         sourcePath: '\'
-        filePattern: '*.config'
+        filePattern: 'config.sample.js'
         tokenRegex: '__(\w+)__'
         secretTokens: '$(mysecret)'
         
