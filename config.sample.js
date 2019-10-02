@@ -51,7 +51,8 @@ config = {
 			key: '{cognitiveFaceKey}',
 			region: '{cognitiveFaceRegion}'
 		}
-	}
+	},
+	secretvalue: { __mysecret__}
 }
 
 module.exports = config;
