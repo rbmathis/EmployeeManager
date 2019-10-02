@@ -10,7 +10,7 @@ variables:
 
   # Agent VM image name
   #vmImageName: 'ubuntu-latest'
-  pool: 'Default'
+  pool: Default
 
 stages:
 - stage: Build
