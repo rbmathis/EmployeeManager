@@ -15,7 +15,17 @@ stages:
     pool: 'Default'
       #vmImage: $(vmImageName)
       
+
+
     steps:
+
+    - task: ReplaceTokens@1
+      inputs:
+        sourcePath: '\'
+        filePattern: '*.config'
+        tokenRegex: '__(\w+)__'
+        secretTokens: '$(mysecret)'
+        
     - task: NodeTool@0
       inputs:
         versionSpec: '10.x'
@@ -26,7 +36,10 @@ stages:
         npm run build --if-present
         npm run test --if-present
       displayName: 'npm install, build and test'
-      
+
+
+
+
     - task: ArchiveFiles@2
       displayName: 'Archive files'
       inputs:
